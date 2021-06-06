@@ -2,9 +2,16 @@ import sys
 import argparse
 
 import torch
+from torch import nn, optim
+import torch.nn.functional as F
 
 from data import mnist
 from model import MyAwesomeModel
+import numpy as np
+
+import matplotlib.pyplot as plt
+import plotext.plot as plx
+
 
 class TrainOREvaluate(object):
     """ Helper class that will help launch class methods as commands
@@ -33,22 +40,58 @@ class TrainOREvaluate(object):
         args = parser.parse_args(sys.argv[2:])
         print(args)
         
-        # TODO: Implement training loop here
-        model = MyAwesomeModel()
-        train_set, _ = mnist()
+        # Implement training loop 
+        model = MyAwesomeModel(10)
+        criterion = nn.NLLLoss()
+        optimizer = optim.Adam(model.parameters(), lr=0.001)
+        train_set, test_set = mnist()
+        
+        epochs = 1
+        steps = 0
+        train_losses = []
+        for e in range(epochs):
+            running_loss = 0
+            for images, labels in train_set:
+                log_ps = model(images)
+                loss = criterion(log_ps, labels)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                running_loss += loss.item()
+                steps += 1
+                train_losses.append(loss.item()/64)
+            print(f"Training loss: {running_loss/len(train_set)}")
+            
+        x = np.linspace(0, steps, steps, endpoint = False)
+        y = np.array(train_losses)
+        plx.scatter(x, y)
+        plx.show()
+           
+        torch.save(model.state_dict(), 'model.pth')
         
     def evaluate(self):
         print("Evaluating until hitting the ceiling")
         parser = argparse.ArgumentParser(description='Training arguments')
-        parser.add_argument('--load_model_from', default="")
+        parser.add_argument('--load_model_from', default="model.pth")
         # add any additional argument that you want
-        args = parser.parse_args(sys.argv[2:])
-        print(args)
         
-        # TODO: Implement evaluation logic here
-        if args.load_model_from:
-            model = torch.load(args.load_model_from)
+        model = MyAwesomeModel(10)
+        dict_ = torch.load("model.pth")
+        model.load_state_dict(dict_)
         _, test_set = mnist()
+        
+        accuracy = 0
+        counter = 0
+        # turn off gradients for the purpose of speeding up the code
+        with torch.no_grad():
+            for images, labels in test_set: # with batch size 64
+                ps = torch.exp(model(images))
+                top_p, top_class = ps.topk(1, dim=1)
+                equals = top_class == labels.view(*top_class.shape)
+                counter += 1
+                accuracy += torch.mean(equals.type(torch.FloatTensor))
+            accuracy = accuracy / counter
+            print(f'Accuracy: {accuracy.item()*100}%')
 
 if __name__ == '__main__':
     TrainOREvaluate()
