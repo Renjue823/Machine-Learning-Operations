@@ -46,7 +46,7 @@ class TrainOREvaluate(object):
         optimizer = optim.Adam(model.parameters(), lr=0.001)
         train_set, test_set = mnist()
         
-        epochs = 1
+        epochs = 20
         steps = 0
         train_losses = []
         for e in range(epochs):
@@ -61,11 +61,6 @@ class TrainOREvaluate(object):
                 steps += 1
                 train_losses.append(loss.item()/64)
             print(f"Training loss: {running_loss/len(train_set)}")
-            
-        x = np.linspace(0, steps, steps, endpoint = False)
-        y = np.array(train_losses)
-        plx.scatter(x, y)
-        plx.show()
            
         torch.save(model.state_dict(), 'model.pth')
         
