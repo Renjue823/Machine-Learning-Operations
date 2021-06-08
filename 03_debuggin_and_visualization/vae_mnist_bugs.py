@@ -15,7 +15,8 @@ from torch.utils.data import DataLoader
 # Model Hyperparameters
 dataset_path = '~/datasets'
 cuda = True
-DEVICE = torch.device("cuda" if cuda else "cpu")
+# only cpu is available on MAC
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 batch_size = 100
 x_dim  = 784
 hidden_dim = 400
@@ -51,8 +52,8 @@ class Encoder(nn.Module):
         
         return z, mean, log_var
        
-    def reparameterization(self, mean, var):
-        epsilon = torch.randn(*var.shape)
+    def reparameterization(self, mean, var,):
+        epsilon = torch.randn_like(var)
         
         z = mean + var*epsilon
         
@@ -107,7 +108,9 @@ for epoch in range(epochs):
     for batch_idx, (x, _) in enumerate(train_loader):
         x = x.view(batch_size, x_dim)
         x = x.to(DEVICE)
-
+        # before gradient decent, gradients should be set to zero
+        optimizer.zero_grad()
+        print(x.shape)
         x_hat, mean, log_var = model(x)
         loss = loss_function(x, x_hat, mean, log_var)
         

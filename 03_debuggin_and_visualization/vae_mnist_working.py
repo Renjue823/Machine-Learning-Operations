@@ -10,18 +10,21 @@ from torchvision.utils import save_image
 from torchvision.datasets import MNIST
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
+import cProfile
+import pstats
+import re
 
 
 # Model Hyperparameters
 dataset_path = '~/datasets'
 cuda = True
-DEVICE = torch.device("cuda" if cuda else "cpu")
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 batch_size = 100
 x_dim  = 784
 hidden_dim = 400
 latent_dim = 20
 lr = 1e-3
-epochs = 5
+epochs = 1 # default: 5
 
 
 # Data loading
@@ -38,8 +41,8 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         
         self.FC_input = nn.Linear(input_dim, hidden_dim)
-        self.FC_mean  = nn.Linear(hidden_dim, latent_dim)
-        self.FC_var   = nn.Linear (hidden_dim, latent_dim)
+        self.FC_mean  = nn.Linear(hidden_dim, latent_dim) # (400, 20)
+        self.FC_var   = nn.Linear (hidden_dim, latent_dim) # (400, 20)
         self.training = True
         
     def forward(self, x):
@@ -110,7 +113,6 @@ for epoch in range(epochs):
         x = x.to(DEVICE)
 
         optimizer.zero_grad()
-
         x_hat, mean, log_var = model(x)
         loss = loss_function(x, x_hat, mean, log_var)
         
@@ -139,3 +141,8 @@ with torch.no_grad():
     generated_images = decoder(noise)
     
 save_image(generated_images.view(batch_size, 1, 28, 28), 'generated_sample.png')
+
+# # run cProfile 
+# cProfile.run('Encoder(784, 400, 20)', 'restats')
+# p = pstats.Stats('restats')
+# p.strip_dirs().sort_stats('time').print_stats()
