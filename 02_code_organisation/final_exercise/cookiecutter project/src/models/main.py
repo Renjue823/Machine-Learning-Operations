@@ -5,13 +5,14 @@ sys.path.append('/Users/lee/Downloads/Renjue/Machine-Learning-Operations/02_code
 import torch
 from torch import nn, optim
 import torch.nn.functional as F
+import torchvision
+from torch.utils.tensorboard import SummaryWriter
 
 from data.make_dataset import main
 from model import MyAwesomeModel
 import numpy as np
 
 import matplotlib.pyplot as plt
-
 
 class TrainOREvaluate(object):
     """ Helper class that will help launch class methods as commands
@@ -41,14 +42,19 @@ class TrainOREvaluate(object):
         print(args)
         
         # Implement training loop 
+
+        # implement summary writer
+        writer = SummaryWriter()
+
         model = MyAwesomeModel(10)
         criterion = nn.NLLLoss()
         optimizer = optim.Adam(model.parameters(), lr=0.001)
         train_set ,_ = main()
         
-        epochs = 20
+        epochs = 5 # should be set to 20
         steps = 0
         train_losses = []
+        train_accuracy = 0
         for e in range(epochs):
             running_loss = 0
             for images, labels in train_set:
@@ -60,6 +66,12 @@ class TrainOREvaluate(object):
                 running_loss += loss.item()
                 steps += 1
                 train_losses.append(loss.item()/64)
+                train_ps = torch.exp(model(images))
+                train_top_p, train_top_class = train_ps.topk(1, dim=1)
+                train_equals = train_top_class == labels.view(*train_top_class.shape)
+                train_accuracy += torch.mean(train_equals.type(torch.FloatTensor))
+                writer.add_scalar('Loss/train', train_losses[-1], steps)
+                writer.add_scalar('Accuracy/train', train_accuracy/steps, steps)
             print(f"Training loss: {running_loss/len(train_set)}")
 
         # plot training curve
