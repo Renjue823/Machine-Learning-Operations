@@ -35,6 +35,21 @@ def main():
 
     return train, test
 
+def set():
+    # Define a transform to normalize the data
+    transform = transforms.Compose([transforms.ToTensor(),
+                              transforms.Normalize((0.5,), (0.5,)),
+                              ])
+
+    # Download and load the training data
+    trainset = datasets.MNIST(
+        '~/Downloads/Renjue/Machine-Learning-Operations/02_code_organisation/final_exercise/cookiecutter project/data/processed/', 
+        download=True, train=True, transform=transform)
+    testset = datasets.MNIST(
+        '~/Downloads/Renjue/Machine-Learning-Operations/02_code_organisation/final_exercise/cookiecutter project/data/processed/', 
+        download=True, train=False, transform=transform)
+    return trainset, testset
+
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

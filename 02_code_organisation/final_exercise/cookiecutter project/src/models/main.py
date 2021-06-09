@@ -51,7 +51,7 @@ class TrainOREvaluate(object):
         optimizer = optim.Adam(model.parameters(), lr=0.001)
         train_set ,_ = main()
         
-        epochs = 5 # should be set to 20
+        epochs = 20 # should be set to 20
         steps = 0
         train_losses = []
         train_accuracy = 0
