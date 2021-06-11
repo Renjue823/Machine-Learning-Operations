@@ -10,7 +10,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from data.make_dataset import main
 from model import MyAwesomeModel
-import numpy as np
+import numpy as npcd
 
 import matplotlib.pyplot as plt
 
